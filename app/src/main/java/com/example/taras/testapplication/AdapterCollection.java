@@ -1,39 +1,51 @@
 package com.example.taras.testapplication;
 
-import android.annotation.SuppressLint;
-import android.content.Context;
 import android.os.Bundle;
-import android.support.constraint.solver.widgets.ConstraintTableLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.view.PagerAdapter;
-import android.text.Layout;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.SearchView;
+
+import java.util.ArrayList;
 
 
-public class AdapterCollection extends FragmentPagerAdapter {
+public class AdapterCollection extends FragmentStatePagerAdapter {
 
-    private long baseId = 0;
+    private ArrayList<Integer> fragmentCollection = new ArrayList<Integer>();
+    private int numberOfFragments = 1;
 
     public AdapterCollection(FragmentManager fm) {
         super(fm);
     }
-    private int mycounter = 1;
 
-
-    public void addFragment(){
-        this.mycounter += 1;
+    public int getPagePosition(int pageNumber)
+    {
+        int pagePosition = 0;
+        for(int i = 0; i < numberOfFragments; i++){
+            if(fragmentCollection.get(i) == pageNumber){
+                pagePosition = i;
+                break;
+            }
+        }
+        return  pagePosition;
     }
 
-    public void deleteFragment(){
-        if(mycounter != 1) {
-            this.mycounter -= 1;
+    public void initializeCollection()
+    {
+        fragmentCollection.add(1);
+        numberOfFragments = fragmentCollection.size();
+    }
 
+    public int getPageNumber(int fragmentNumber){return fragmentCollection.get(fragmentNumber);}
+
+    public void addFragment(){
+        fragmentCollection.add(fragmentCollection.get(numberOfFragments -1) + 1);
+        numberOfFragments = fragmentCollection.size();
+    }
+
+    public void deleteFragment(int fragmentNumber){
+        if(fragmentNumber != 0) {
+            fragmentCollection.remove(fragmentNumber);
+            numberOfFragments = fragmentCollection.size();
         }
     }
 
@@ -41,35 +53,17 @@ public class AdapterCollection extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         DemoFragment demoFragment = new DemoFragment();
         Bundle bundle = new Bundle();
-        position = position+1;
-        bundle.putString("message","" + position);
+        bundle.putString("message","" + fragmentCollection.get(position));
         demoFragment.setArguments(bundle);
-
         return demoFragment;
     }
 
+    @Override
+    public int getCount() {return numberOfFragments;}
 
     @Override
-    public int getCount() {
-        return mycounter;
-    }
+    public int getItemPosition(Object object) { return  POSITION_NONE; }
 
-    @Override
-    public long getItemId(int position) {
-        // give an ID different from position when position has been changed
-        return baseId + position;
-    }
-
-    @Override
-    public int getItemPosition(Object object) {
-        // refresh all fragments when data set changed
-        return PagerAdapter.POSITION_NONE;
-    }
-
-    public void notifyChangeInPosition(int n) {
-        // shift the ID returned by getItemId outside the range of all previous fragments
-        baseId += getCount() + n;
-    }
 
 
 

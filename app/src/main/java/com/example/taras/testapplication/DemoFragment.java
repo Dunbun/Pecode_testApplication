@@ -23,24 +23,15 @@ import android.widget.Toast;
 public class DemoFragment extends Fragment  {
     private TextView textView;
 
-    public DemoFragment() {
-        // Required empty public constructor
-    }
-
-
-
+    public DemoFragment() {}
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
         View view =  inflater.inflate(R.layout.fragment_demo, container, false);
         textView = view.findViewById(R.id.textdisplay);
         final String message = getArguments().getString("message");
         textView.setText(message);
-
-
         return view;
     }
-
 }

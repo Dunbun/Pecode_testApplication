@@ -19,7 +19,7 @@ public class MainActivity extends AppCompatActivity {
     private ViewPager viewPager;
     private AdapterCollection adapter;
     private NotificationManager manager = null;
-    private int position = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -27,62 +27,56 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         viewPager = findViewById(R.id.pager);
         adapter = new AdapterCollection(getSupportFragmentManager());
+        adapter.initializeCollection();
         viewPager.setAdapter(adapter);
-    }
-
-    @Override
-    protected void onDestroy() {
-        manager.cancelAll();
-        super.onDestroy();
     }
 
     public void plus(View view) {
         adapter.addFragment();
+        adapter.notifyDataSetChanged();
         viewPager.setAdapter(adapter);
         viewPager.setCurrentItem(adapter.getCount() - 1);
     }
 
     public void minus(View view) {
-        position = adapter.getCount();
+        int position = viewPager.getCurrentItem();
         if (manager != null) {
-            manager.cancel(position);
+            manager.cancel(adapter.getPageNumber(position));
         }
-        adapter.deleteFragment();
+        adapter.deleteFragment(position);
+        adapter.notifyDataSetChanged();
         viewPager.setAdapter(adapter);
         viewPager.setCurrentItem(position-1);
     }
 
     public void makeNotification(View view) {
-        addNotification();
-    }
-    @Override
-    protected void onNewIntent(Intent intent) {
-        Bundle extra = intent.getExtras();
-
-        int notificationId = extra == null
-                ? 0
-                : extra.getInt("id");
-
-        viewPager.setCurrentItem(notificationId-1);
-    }
-
-    public void addNotification() {
+        int current = adapter.getPageNumber(viewPager.getCurrentItem());
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this)
                 .setSmallIcon(R.mipmap.ic_launcher)
                 .setContentTitle("You create a notification")
-                .setContentText("Notification " + (viewPager.getCurrentItem() + 1));
-
+                .setContentText("Notification " + current);
         Intent notificationIntent = new Intent(this, MainActivity.class);
-
-        int current = viewPager.getCurrentItem()+1;
         notificationIntent.putExtra("id", current);
-
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, current, notificationIntent, 0);
-
-        builder.setContentIntent(contentIntent);
-
+        if(current == 6) {
+            PendingIntent contentIntent = PendingIntent.getActivity(this,  666, notificationIntent, 0);
+            builder.setContentIntent(contentIntent);
+        }
+        else{
+            PendingIntent contentIntent = PendingIntent.getActivity(this, current, notificationIntent, 0);
+            builder.setContentIntent(contentIntent);
+        }
         manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         manager.notify(current, builder.build());
     }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
+        Bundle extra = intent.getExtras();
+        int notificationId = extra == null
+                ? 0
+                : extra.getInt("id");
+        viewPager.setCurrentItem(adapter.getPagePosition(notificationId));
+    }
+
 }
