@@ -20,7 +20,6 @@ public class MainActivity extends AppCompatActivity {
     private AdapterCollection adapter;
     private NotificationManager manager = null;
     private int position = 0;
-    private int notificationId = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,18 +36,6 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        Intent intent = getIntent();
-        Bundle extra = intent.getExtras();
-        if (extra != null)
-            notificationId = intent.getExtras().getInt("id");
-        viewPager.setCurrentItem(1);
-        // put your code here...
-
-    }
-
     public void plus(View view) {
         adapter.addFragment();
         viewPager.setAdapter(adapter);
@@ -56,14 +43,13 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void minus(View view) {
-        //position = viewPager.getCurrentItem() - 1;
         position = adapter.getCount();
         if (manager != null) {
-            manager.cancel(position - 1);
+            manager.cancel(position);
         }
         adapter.deleteFragment();
         viewPager.setAdapter(adapter);
-        viewPager.setCurrentItem(position);
+        viewPager.setCurrentItem(position-1);
     }
 
     public void makeNotification(View view) {
@@ -72,9 +58,12 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onNewIntent(Intent intent) {
         Bundle extra = intent.getExtras();
-        if(extra != null)
-        //notificationId = intent.getExtras().getInt("id");
-        viewPager.setCurrentItem(1);
+
+        int notificationId = extra == null
+                ? 0
+                : extra.getInt("id");
+
+        viewPager.setCurrentItem(notificationId-1);
     }
 
     public void addNotification() {
@@ -84,12 +73,16 @@ public class MainActivity extends AppCompatActivity {
                 .setContentText("Notification " + (viewPager.getCurrentItem() + 1));
 
         Intent notificationIntent = new Intent(this, MainActivity.class);
-        // notificationIntent.putExtra("id",(int)viewPager.getCurrentItem());
-        notificationIntent.putExtra("id", 0);
-        PendingIntent contentIntent = PendingIntent.getActivity(this, 0, notificationIntent, Intent.FILL_IN_ACTION);
+
+        int current = viewPager.getCurrentItem()+1;
+        notificationIntent.putExtra("id", current);
+
+        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent contentIntent = PendingIntent.getActivity(this, current, notificationIntent, 0);
+
         builder.setContentIntent(contentIntent);
 
         manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        manager.notify(viewPager.getCurrentItem(), builder.build());
+        manager.notify(current, builder.build());
     }
 }
